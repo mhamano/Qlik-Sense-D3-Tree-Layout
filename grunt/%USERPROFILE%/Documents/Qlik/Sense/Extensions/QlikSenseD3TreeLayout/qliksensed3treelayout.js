@@ -30,9 +30,9 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
 
         snapshot: { canTakeSnapshot: true },
 
-        resize : function() {
+        //resize : function() {
             //do nothing
-        },
+        //},
 
         // Paint Method
         paint: function ($element, layout) {
@@ -53,17 +53,16 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
                 { qHeight : 1000, qWidth : 5 }
               ]
             }, function (reply) {
-              createTreeStructuredData(reply, $element); });
+              createTreeStructuredData(reply, $element, layout.properties); });
             }
         } // (Paint Method)
     };
 });
 
 //
-function createTreeStructuredData(reply, $element) {
+function createTreeStructuredData(reply, $element, properties) {
 
   var qMatrix = reply.qHyperCube.qDataPages[0].qMatrix;
-  var rootNodeID = 0;
 
   var rawData = qMatrix.map(function(d) {
     return {
@@ -74,6 +73,13 @@ function createTreeStructuredData(reply, $element) {
       "mea": d[3].qText
     }
   });
+
+  var node_with_lowest_id = _.min(rawData, function(d) {
+    return d.id;
+  });
+
+  var rootNodeID = node_with_lowest_id.id;
+  console.log(rootNodeID)
 
   var returnArrayOfAllChildNodes = function(parentID, parentArray) {
     var childNodes = _.where(rawData, {"parentId": parentID});
@@ -89,7 +95,6 @@ function createTreeStructuredData(reply, $element) {
             "mea": childNodes[i]["mea"]
           };
           resultArr[i] = childNode;
-          console.log(childNodes[i]["id"], resultArr[i])
           returnArrayOfAllChildNodes(childNodes[i]["id"], resultArr[i])
       }
       parentArray["children"] = resultArr;
@@ -99,14 +104,14 @@ function createTreeStructuredData(reply, $element) {
     }
   }
 
-  var rootNode = _.where(rawData, {"id": rootNodeID})[0];
+  var rootNode = _.findWhere(rawData, {"id": rootNodeID});
   var treeStructuredData = returnArrayOfAllChildNodes(rootNodeID, rootNode);
 
-  renderChart(reply, $element, treeStructuredData);
+  renderChart(reply, $element, properties, treeStructuredData);
 }
 
 // Render Chart
-function renderChart(reply, $element, treeStructuredData) {
+function renderChart(reply, $element, properties, treeStructuredData) {
 
   var object_id = reply.qInfo.qId;
   var $divContainer = $(document.createElement('div'));
@@ -145,9 +150,18 @@ function renderChart(reply, $element, treeStructuredData) {
   var toolTip = d3.select('#tooltip');
   var toolTipContent = d3.select('#tooltipcontent');
 
+  var ext_width = 0, ext_height = 0;
+  if (properties.defineScreenSize) {
+      ext_width = properties.screenWidth;
+      ext_height = properties.screenHight;
+  } else {
+      ext_width = $element.width();
+      ext_height = $element.height();
+  }
+
   var margin = {top: 20, right: 120, bottom: 20, left: 120},
-      width = 960 - margin.right - margin.left,
-      height = 800 - margin.top - margin.bottom;
+      width = ext_width - margin.right - margin.left,
+      height = ext_height - margin.top - margin.bottom;
 
   var i = 0,
       duration = 750,
@@ -167,47 +181,23 @@ function renderChart(reply, $element, treeStructuredData) {
     .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-
-  // Recieve json data
-  var base = requirejs.s.contexts._.config.baseUrl + requirejs.s.contexts._.config.paths.extensions
-  var url = base + "/qliksensed3treelayout/lib/data/flare.json";
-
-  // Read Jason
-  // d3.json(url, function(error, treeStructuredData) {
-  //   if (error) throw error;
-  //
-  //   root = flare;
-  //   root.x0 = height / 2;
-  //   root.y0 = 0;
-  //
-  //   function collapse(d) {
-  //     if (d.children) {
-  //       d._children = d.children;
-  //       d._children.forEach(collapse);
-  //       d.children = null;
-  //     }
-  //   }
-  //
-  //   root.children.forEach(collapse);
-  //   update(root);
-  //
-  //   // function collapseAll(d) {
-  //   //   if (d.children) {
-  //   //     //d.children.forEach(collapseAll);
-  //   //     //console.log(d)
-  //   //     //if(treeProperties.treeLayout.typeOfLeaf=="Circle" &&treeProperties.treeStructure.defineCollapseLevel && d.depth>=treeProperties.treeStructure.collapseLevel){
-  //   //         if (d.depth >= 0) {
-  //   //           //collapse(d);
-  //   //         }
-  //   //       }
-  //   // }
-  //   //
-  //   // if(!root.children){
-  //   //   update(root);
-  //   // } else {
-  //   //   root.children.forEach(collapseAll);
-  //   //   update(root);
-  //   // }
+    // function collapseAll(d) {
+    //   if (d.children) {
+    //     //d.children.forEach(collapseAll);
+    //     //console.log(d)
+    //     //if(treeProperties.treeLayout.typeOfLeaf=="Circle" &&treeProperties.treeStructure.defineCollapseLevel && d.depth>=treeProperties.treeStructure.collapseLevel){
+    //         if (d.depth >= 0) {
+    //           //collapse(d);
+    //         }
+    //       }
+    // }
+    //
+    // if(!root.children){
+    //   update(root);
+    // } else {
+    //   root.children.forEach(collapseAll);
+    //   update(root);
+    // }
   //
   // });
 
@@ -215,17 +205,24 @@ function renderChart(reply, $element, treeStructuredData) {
   root.x0 = height / 2;
   root.y0 = 0;
 
-  function collapse(d) {
+  // Toggle children.
+	function collapse(d) {
     if (d.children) {
       d._children = d.children;
-      d._children.forEach(collapse);
       d.children = null;
+    } else {
+      d.children = d._children;
+      d._children = null;
     }
+	}
+
+  if(!root.children){
+    update(root);
   }
-
-  root.children.forEach(collapse);
-  update(root);
-
+  else {
+    root.children.forEach(collapse);
+    update(root);
+  }
 
   d3.select(self.frameElement).style("height", "800px");
 

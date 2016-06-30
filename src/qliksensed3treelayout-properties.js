@@ -55,6 +55,31 @@ define([], function () {
               type: "string",
               expression: ""
             },
+            defineScreenSize: {
+              ref: "properties.defineScreenSize",
+              label: "Define Screen Size",
+              type: "boolean",
+              component: "switch",
+              options: [
+                { value: true, label: "Custom" },
+                { value: false, label: "Auto"}
+              ],
+              defaultValue: false
+            },
+            screenHight: {
+              ref: "properties.screenHight",
+              label: "Screen Height",
+              type: "integer",
+              defaultValue: 960,
+              show: function( data ){ return data.properties.defineScreenSize; }
+            },
+            screenWidth: {
+              ref: "properties.screenWidth",
+              label: "Screen Width",
+              type: "integer",
+              defaultValue: 800,
+              show: function( data ){ return data.properties.defineScreenSize; }
+            },
             defineCollapseLevel: {
               ref: "properties.defineCollapseLevel",
               label: "Define a Default Collapse Level",
@@ -71,8 +96,8 @@ define([], function () {
               label: "Default Collapse Level",
               type: "integer",
               expression: "",
-              defaultValue: 3
-              //show: function( data ){ return data.properties.defineCollapseLevel; }
+              defaultValue: 3,
+              show: function( data ){ return data.properties.defineCollapseLevel; }
             }
           }
         }
