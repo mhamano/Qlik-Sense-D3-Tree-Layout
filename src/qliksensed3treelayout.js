@@ -30,6 +30,10 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
         // Paint Method
         paint: function ($element, layout) {
 
+          if(layout.properties.defineScreenSize) {
+            extensionUtils.addStyleToHeader("<style>div.qv-object-content-container {overflow: auto;}</style>");
+          }
+
           var self = this;
           var app = qlik.currApp(this);
 
@@ -188,7 +192,6 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
 
             function collapseAll(d) {
               if (d.children) {
-                console.log(d,d.depth)
                 d.children.forEach(collapseAll);
                 if(properties.defineCollapseLevel && d.depth>=properties.collapseLevel){
                   collapse(d);
@@ -203,7 +206,6 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
               root.children.forEach(collapseAll);
               update(root);
             }
-
 
             d3.select(self.frameElement).style("height", "800px");
 
