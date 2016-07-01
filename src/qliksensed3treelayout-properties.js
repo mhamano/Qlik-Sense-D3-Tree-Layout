@@ -2,17 +2,43 @@
 define([], function () {
   'use strict';
 
-    var dimensions = {
-        uses: "dimensions",
-        min: 0,
-        max: 1
-    };
+  var dimensions = {
+		type: "items",
+		label: "Dimensions",
+		ref: "qListObjectDef",
+		min: 1,
+		max: 1,
+		show: false,
+		items: {
+			label: {
+				type: "string",
+				ref: "qListObjectDef.qDef.qFieldLabels.0",
+				label: "Label",
+				show: true
+			},
+			libraryId: {
+				type: "string",
+				component: "library-item",
+				libraryItemType: "dimension",
+				ref: "qListObjectDef.qLibraryId",
+				label: "Dimension",
+				show: function ( data ) {
+					return data.qListObjectDef && data.qListObjectDef.qLibraryId;
+				}
+			},
+			field: {
+				type: "string",
+				expression: "always",
+				expressionType: "dimension",
+				ref: "qListObjectDef.qDef.qFieldDefs.0",
+				label: "Node Name",
+				show: function ( data ) {
+					return data.qListObjectDef && !data.qListObjectDef.qLibraryId;
+				}
+			}
+		}
+	};
 
-    var measures = {
-        uses: "measures",
-        min: 0,
-        max: 1
-    };
 
     var sorting = {
         uses: "sorting"
@@ -112,7 +138,7 @@ define([], function () {
         items: {
             treeConfigurations: treeConfigurations,
             dimensions: dimensions,
-            measures: measures,
+            //measures: measures,
             sorting: sorting,
             //addons: addons,
             settings: settings

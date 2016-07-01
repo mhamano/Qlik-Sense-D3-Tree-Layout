@@ -2,15 +2,14 @@
 define( [], function () {
     'use strict';
     return {
-        qHyperCubeDef: {
-            qDimensions: [],
-            qMeasures: [],
-            qInitialDataFetch: [
-                {
-                    qWidth: 2,
-                    qHeight: 50
-                }
-            ]
-        }
+          qListObjectDef: {
+            qShowAlternatives: true,
+            qFrequencyMode: "V",
+            selectionMode : "CONFIRM",
+            qInitialDataFetch: [{
+              qWidth: 2,
+              qHeight: 50
+            }]
+          }
     };
 } );
