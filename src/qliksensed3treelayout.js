@@ -197,7 +197,7 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
           if (d.children) {
               //d.children.forEach(collapseAll);
               if( properties.defineCollapseLevel && d.depth && d.depth<=properties.collapseLevel){
-                collapse(d);
+                collapse
               }
           }
         }
@@ -229,13 +229,7 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
           // Enter any new nodes at the parent's previous position.
           var nodeEnter = node.enter().append("g")
               .attr("class", "node")
-              .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; })
-              .on("mouseover", function(d) { node_onMouseOver(d); })
-              .on("mouseout", function(d) {
-                  toolTip.transition()									// declare the transition properties to fade-out the div
-                          .duration(500)									// it shall take 500ms
-                          .style("opacity", "0");							// and go all the way to an opacity of nil
-                  });
+              .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; });
 
           nodeEnter.append("circle")
               .attr("r", 1e-6)
@@ -248,6 +242,12 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
               .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
               .text(function(d) { return d.name; })
               .on("click", selection)
+              .on("mouseover", function(d) { node_onMouseOver(d); })
+              .on("mouseout", function(d) {
+                  toolTip.transition()									// declare the transition properties to fade-out the div
+                          .duration(500)									// it shall take 500ms
+                          .style("opacity", "0");							// and go all the way to an opacity of nil
+                })
               .style("fill-opacity", 1e-6);
 
           // Transition nodes to their new position.
@@ -314,9 +314,15 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
           .style("opacity", ".85");
           toolTipContent.html(d.name);
 
+          console.log(d3.event)
+
+
           //placing tooltip near cursor
-          toolTip.style("left", (d3.event.pageX-position.left+20) + "px")
-                 .style("top", (d3.event.pageY-position.top) + "px")
+          //toolTip.style("left", (d3.event.pageX-position.left+20) + "px")
+          //       .style("top", (d3.event.pageY-position.top) + "px")
+          console.log("pageY: " + d3.event.pageY + " clientY: " + d3.event.clientY + " screenY: " + d3.event.screenY + " offsetY: " + d3.event.offsetY + " layerY: " + d3.event.layerY)
+          toolTip.style("left", (d3.event.layerX + 20) + "px")
+                 .style("top", (d3.event.layerY) + "px")
                  .style("left", d + "px")
                  .style("top", d + "px")
                  .style("z-index", 5);
