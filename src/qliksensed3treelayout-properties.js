@@ -75,11 +75,43 @@ define([], function () {
               type: "string",
               expression: ""
             },
+            defineMeasure: {
+              ref: "properties.defineMeasure",
+              label: "Define Measure",
+              type: "boolean",
+              component: "switch",
+              options: [
+                { value: true, label: "Activated" },
+                { value: false, label: "Deactivated"}
+              ],
+              defaultValue: false
+            },
             measure: {
               ref: "properties.measure",
               label: "Measure",
               type: "string",
-              expression: ""
+              expression: "",
+              show: function( data ){ return data.properties.defineMeasure; }
+            },
+            circleRadiusSize: {
+                type: "number",
+                component: "slider",
+                label: "Circle Radius Size",
+                ref: "properties.circleRadius",
+                min: 0,
+                max: 10,
+                step: 1,
+                defaultValue: 4
+            },
+            fontSize: {
+                type: "number",
+                component: "slider",
+                label: "Font Size",
+                ref: "properties.fontSize",
+                min: 0,
+                max: 20,
+                step: 1,
+                defaultValue: 10
             },
             defineScreenSize: {
               ref: "properties.defineScreenSize",

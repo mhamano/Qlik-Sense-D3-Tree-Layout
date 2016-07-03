@@ -34,10 +34,15 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
             extensionUtils.addStyleToHeader("<style>div.qv-object-content-container {overflow: auto;}</style>");
           }
 
+          var measure = "Sum(1)"
+          if(layout.properties.defineMeasure && layout.properties.measure) {
+              measure = layout.properties.measure;
+          }
+
           var self = this;
           var app = qlik.currApp(this);
 
-          if( layout.properties.nodeID && layout.properties.parentNodeID  && layout.properties.nodeName && layout.properties.measure) {
+          if( layout.properties.nodeID && layout.properties.parentNodeID  && layout.properties.nodeName ) {
             app.createCube({
               qDimensions : [
                 { qDef : {qFieldDefs: ["=" + layout.properties.nodeID]} },
@@ -45,17 +50,18 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
                 { qDef : {qFieldDefs: ["=" + layout.properties.nodeName]} }
               ],
               qMeasures : [
-                { qDef : { qDef : "=" + layout.properties.measure } }
+                { qDef : { qDef : "=" + measure } }
               ],
               qInitialDataFetch : [
                 { qHeight : 1000, qWidth : 5 }
               ]
             }, function (reply) {
-              createTreeStructuredData(reply, $element, layout.properties); });
+              console.log(reply)
+              createHierarchicalData(reply, $element, layout.properties); });
           }
 
           // Create Tree
-          function createTreeStructuredData(reply, $element, properties) {
+          function createHierarchicalData(reply, $element, properties) {
 
             var qMatrix = reply.qHyperCube.qDataPages[0].qMatrix;
 
@@ -63,20 +69,20 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
               return {
                 "id": d[0].qNum,
                 "elemNum": d[0].qElemNumber,
-                "parentId": d[1].qNum,
+                "parent_id": d[1].qNum,
                 "name": d[2].qText,
                 "mea": d[3].qText
               }
             });
 
+            // Get the node with lowest id as the top node.
             var node_with_lowest_id = _.min(flat_data, function(d) {
               return d.id;
             });
-
             var root_node_id = node_with_lowest_id.id;
 
-            var returnArrayOfAllChildNodes = function(parent_id, parent_array, depth) {
-              var child_nodes = _.where(flat_data, {"parentId": parent_id});
+            var returnArrayContainingAllChildNodes = function(parent_id, parent_array, depth) {
+              var child_nodes = _.where(flat_data, {"parent_id": parent_id});
               var child_nodes_array = [];
               depth++;
 
@@ -86,12 +92,12 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
                       "id": child_nodes[i]["id"],
                       "elemNum": child_nodes[i]["elemNum"],
                       "name": child_nodes[i]["name"],
-                      "parentId": child_nodes[i]["parentId"],
+                      "parent_id": child_nodes[i]["parent_id"],
                       "mea": child_nodes[i]["mea"],
                       "depth": depth
                     };
                     child_nodes_array[i] = child_node;
-                    returnArrayOfAllChildNodes(child_nodes[i]["id"], child_nodes_array[i], depth)
+                    returnArrayContainingAllChildNodes(child_nodes[i]["id"], child_nodes_array[i], depth)
                 }
                 parent_array["children"] = child_nodes_array;
                 return parent_array;
@@ -102,17 +108,17 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
 
             var rootNode = _.findWhere(flat_data, {"id": root_node_id});
             var top_depth = 0;
-            var treeStructuredData = returnArrayOfAllChildNodes(root_node_id, rootNode, top_depth);
+            var hierarchical_data = returnArrayContainingAllChildNodes(root_node_id, rootNode, top_depth);
 
-            renderChart(reply, $element, properties, treeStructuredData, flat_data);
+            renderChart(reply, $element, properties, hierarchical_data, flat_data);
           }
 
           // Render Chart
-          function renderChart(reply, $element, properties, treeStructuredData, flat_data) {
+          function renderChart(reply, $element, properties, hierarchical_data, flat_data) {
 
-            var object_id = reply.qInfo.qId;
+            var extension_object_id = reply.qInfo.qId;
             var $divContainer = $(document.createElement('div'));
-            $divContainer.attr('id',object_id);
+            $divContainer.attr('id',extension_object_id);
             $divContainer.addClass('divTemplateContainer');
             $element.empty();
             $element.append($divContainer);
@@ -169,13 +175,13 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
                 .projection(function(d) { return [d.y, d.x]; });
 
             // Select SVG element
-            var svg = d3.select("#" + object_id).append("svg")
+            var svg = d3.select("#" + extension_object_id).append("svg")
                 .attr("width", width + margin.right + margin.left)
                 .attr("height", height + margin.top + margin.bottom)
-              .append("g")
+                .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            root = treeStructuredData;
+            root = hierarchical_data;
             root.x0 = height / 2;
             root.y0 = 0;
 
@@ -230,14 +236,21 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
               nodeEnter.append("circle")
                   .attr("r", 1e-6)
                   .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; })
-                  .on("click", click);
+                  .on("click", eventCollapseChild);
 
               nodeEnter.append("text")
-                  .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+                  .attr("x", function(d) { return d.children || d._children ? -10 - ((properties.circleRadius-4) / 2) : 10 + ((properties.circleRadius-4) / 2); })
                   .attr("dy", ".35em")
                   .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-                  .text(function(d) { return d.name; })
-                  .on("click", selection)
+                  .style("font-size", properties.fontSize + "px")
+                  .text(function(d) {
+                      if (properties.defineMeasure) {
+                        return d.name + ": " + d.mea;
+                      } else {
+                        return d.name;
+                      }
+                  })
+                  .on("click", eventMakeSelection)
                   .on("mouseover", function(d) { node_onMouseOver(d); })
                   .on("mouseout", function() {
                       toolTip.transition()									// declare the transition properties to fade-out the div
@@ -252,7 +265,7 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
                   .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
               nodeUpdate.select("circle")
-                  .attr("r", 4.5)
+                  .attr("r", properties.circleRadius)
                   .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
 
               nodeUpdate.select("text")
@@ -308,7 +321,13 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
               toolTip.transition()
               .duration(200)
               .style("opacity", ".85");
-              toolTipContent.html(d.name);
+
+
+              if (properties.defineMeasure) {
+                toolTipContent.html(d.name + ":" + d.mea);
+              } else {
+                toolTipContent.html(d.name);
+              }
 
               //placing tooltip near cursor
               toolTip.style("left", (d3.event.layerX + 20) + "px")
@@ -317,8 +336,8 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
                      .style("top", d + "px")
                      .style("z-index", 5);
             }
-            // Toggle children on click.
-            function click(d) {
+            // Collapse clild on click.
+            function eventCollapseChild(d) {
               if (d.children) {
                 d._children = d.children;
                 d.children = null;
@@ -329,8 +348,8 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
               update(d);
             }
 
-            // selection
-            function selection(d) {
+            // Make Selections
+            function eventMakeSelection(d) {
 
               var dim = 0;
               var selected = [];
@@ -341,7 +360,7 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
                 if(parent_id > 0) {
                   var parentNodes = _.where(flat_data, {"id": parent_id});
                   _.each(parentNodes, function(d) {
-                    selectParentNodes(d.parentId);
+                    selectParentNodes(d.parent_id);
                     selected.push(d.elemNum)
                   })
                 } else {
@@ -349,10 +368,12 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
                 }
               }
 
-              selectParentNodes(d.parentId);
+              //clear selections
+              self.backendApi.clearSelections();
+
+              selectParentNodes(d.parent_id);
 
               //Apply selection
-              //self.selectValues( dim, selected , true );
               self.selectValues(dim, selected, true);
             }
           }
