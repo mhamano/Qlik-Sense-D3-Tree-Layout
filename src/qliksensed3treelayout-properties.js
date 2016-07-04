@@ -60,17 +60,6 @@ define([], function () {
               step: 1,
               defaultValue: 10
           },
-          clearAll: {
-            ref: "properties.clearAll",
-            label: "Clear Selections Before Finding Parent Nodes",
-            type: "boolean",
-            component: "switch",
-            options: [
-              { value: true, label: "Yes" },
-              { value: false, label: "No"}
-            ],
-            defaultValue: true
-          },
           selectionMode: {
             type: "string",
             component: "dropdown",
@@ -87,6 +76,17 @@ define([], function () {
               label: "Only Selected Node"
             }],
             defaultValue: "parent"
+          },
+          clearAll: {
+            ref: "properties.clearAll",
+            label: "Clear Selections Before Finding Parent Nodes",
+            type: "boolean",
+            component: "switch",
+            options: [
+              { value: true, label: "Yes" },
+              { value: false, label: "No"}
+            ],
+            defaultValue: true
           },
           defineScreenSize: {
             ref: "properties.defineScreenSize",

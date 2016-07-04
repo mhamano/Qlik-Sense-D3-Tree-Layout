@@ -32,11 +32,9 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
         // Paint Method
         paint: function ($element, layout) {
 
-          console.log(layout)
-
+          // Instruction is displayed when dimensions and measure are not set. 
           if(layout.qHyperCube.qDimensionInfo.length < 3 || layout.qHyperCube.qMeasureInfo.length < 1)
             {
-              console.log("yes")
               var html_text = '<h1 style="font-size: 150%;">This extension requires 3 dimensions and 1 measure to define the Tree Structure.</h1>';
               html_text +='<br />Dimensions:<br /><br />';
               html_text +='<b style="color: #1A8C27">Node ID:</b> Numeric ID uniquely identifies each node.<br />';
