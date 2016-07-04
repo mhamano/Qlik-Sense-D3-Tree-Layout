@@ -17,13 +17,7 @@ define([], function () {
   };
 
   var settings = {
-    uses: "settings"
-  };
-
-  var treeConfigurations = {
-    type: "items",
-    component: "expandable-items",
-    label: "Tree Configuration",
+    uses: "settings",
     items: {
       treeStructure:{
         type: "items",
@@ -136,21 +130,16 @@ define([], function () {
       }
     }
   }
-
-
-    // Return values
-    return {
-        type: "items",
-        component: "accordion",
-        items: {
-            dimensions: dimensions,
-            measures: measures,
-            //sorting: sorting,
-            //addons: addons,
-            settings: settings,
-            treeConfigurations: treeConfigurations
-
-        }
-    };
-
+  // Return values
+  return {
+    type: "items",
+    component: "accordion",
+    items: {
+        dimensions: dimensions,
+        measures: measures,
+        //sorting: sorting,
+        //addons: addons,
+        settings: settings
+    }
+  };
 });

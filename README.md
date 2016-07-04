@@ -13,7 +13,7 @@ Qlik Sense Server Please refer to the following instruction for importing an ext
 [Import Extension]( http://help.qlik.com/sense/en-US/online/#../Subsystems/ManagementConsole/Content/QMC_Resources_Extensions_AddingExtensions.htm?Highlight=add extension "Import Extension")
 
 ## Configuration
-This extension includes the following configurable settings: 
+This extension includes the following configurable settings:
 
  * Display Measure - When this switch is activated, measure is displayed on the right side of the node name on the tree.
  * Circle Radius Size - This is for adjusting the circle radius size representing each node.
@@ -22,7 +22,6 @@ This extension includes the following configurable settings:
  * Clear Selections Before Finding Parent/Child Nodes - When this option is enabled, all parent/child nodes are selected after current selections are cleared. When this option is disabled, parent/child node selections are made in the current selections.
  * Define Screen Size - When "Auto" is selected, the width/height of the tree are adjusted to the extension area size. By selecting "Custom", you can specify the size of the extension.
  * Define a Default Collapse Level - When activated, you can specify the depth of the default collapse level.
-
 
 ## Change Log
 
