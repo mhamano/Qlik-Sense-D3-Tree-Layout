@@ -15,7 +15,8 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
     'use strict';
 
     extensionUtils.addStyleToHeader(cssContent);
-    var selected = [], parent_id = null;
+
+    var selected = [], parent_id = null, my_id = null; // When made a selection by clicking on a node text, selected node's elemNum and parent_is are stored.
 
     return {
 
@@ -31,16 +32,34 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
         // Paint Method
         paint: function ($element, layout) {
 
+          console.log(layout)
+
+          if(layout.qHyperCube.qDimensionInfo.length < 3 || layout.qHyperCube.qMeasureInfo.length < 1)
+            {
+              console.log("yes")
+              var html_text = '<h1 style="font-size: 150%;">This extension requires 3 dimensions and 1 measure to define the Tree Structure.</h1>';
+              html_text +='<br />Dimensions:<br /><br />';
+              html_text +='<b style="color: #1A8C27">Node ID:</b> Numeric ID uniquely identifies each node.<br />';
+              html_text +='<b style="color: #1A8C27">Parent ID:</b> Numeric ID of the parent node.<br />';
+              html_text +='<b style="color: #1A8C27">Node Name:</b> Display name of each node.<br />';
+              html_text +='<br /><br />Measure:<br /><br />';
+              html_text +='<b style="color: #1A8C27">Measure:</b>  This is a measure value which is displayed beside each node name on the tree. You can optionally input "Sum(1)" here and switch off "Display Measure" property to hide this measure value.<br /><br />';
+              $element.html(html_text);
+              return null;
+            }
+
+          // When showMeasure switch is ON, scroll bar is displayed.
+          if(layout.properties.defineScreenSize) {
+            extensionUtils.addStyleToHeader("<style>div.qv-object-content-container {overflow: auto;}</style>");
+          }
+
           var self = this;
           var app = qlik.currApp(this);
           var extension_object_id = layout.qInfo.qId;
           var qMatrix = layout.qHyperCube.qDataPages[0].qMatrix;
 
-          if(layout.properties.defineScreenSize) {
-            extensionUtils.addStyleToHeader("<style>div.qv-object-content-container {overflow: auto;}</style>");
-          }
-
-          var flat_data = qMatrix.map(function(d) {
+          // Flatten the qMatrix into an array
+          var flatten_data = qMatrix.map(function(d) {
             return {
               "id": d[0].qNum,
               "elemNum": d[0].qElemNumber,
@@ -50,51 +69,75 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
             }
           });
 
-          // Make selections
-          if(selected && selected.length > 0) {
-            function selectParentNodes(parent_id) {
-              if(parent_id > 0) {
-                var parentNodes = _.where(flat_data, {"id": parent_id});
-                _.each(parentNodes, function(d) {
-                  selectParentNodes(d.parent_id);
-                  selected.push(d.elemNum)
-                })
-              } else {
-                //do nothing
-              }
+          // Select all parent nodes
+          function selectParentNodes(parent_id) {
+            if(parent_id > 0) {
+              var parentNodes = _.where(flatten_data, {"id": parent_id});
+              _.each(parentNodes, function(d) {
+                selectParentNodes(d.parent_id);
+                selected.push(d.elemNum)
+              })
+            } else {
+              //do nothing
             }
-
-            selectParentNodes(parent_id);
-
-            //Apply selection
-            var dim = 0;
-            self.backendApi.selectValues(dim, selected, true);
-            selected = [], parent_id = null;
-            self.paint($element, layout)
-
           }
 
+          // Select all child nodes
+          function selectChildNodes(my_id) {
+            if(my_id > 0) {
+              var childNodes = _.where(flatten_data, {"parent_id": my_id});
+              _.each(childNodes, function(d) {
+                selectChildNodes(d.id);
+                selected.push(d.elemNum)
+              })
+            } else {
+              //do nothing
+            }
+          }
+
+          // Make selections when selection data is stored in the "selected" array.
+          if(selected && selected.length > 0) {
+            // Select parents or child nodes depends on the selectionMode property settings
+            if (layout.properties.selectionMode == "parent" && parent_id) {
+              selectParentNodes(parent_id);
+            } else if (layout.properties.selectionMode == "child" && my_id ) {
+              selectChildNodes(my_id);
+            } else {
+              // do nothing
+            }
+
+            //Apply selections
+            var dim = 0;
+            self.backendApi.selectValues(dim, selected, true);
+
+            selected = [], parent_id = null; // Reset selections
+            self.paint($element, layout); // Repaint the extension
+          }
 
           // Get the node with lowest id as the top node.
-          var node_with_lowest_id = _.min(flat_data, function(d) {
+          // The hierarchy has only one top node, so when there are multiple top nodes,
+          // only node with lowest id and its childlen are displayed.
+          var node_with_lowest_id = _.min(flatten_data, function(d) {
             return d.id;
           });
           var root_node_id = node_with_lowest_id.id;
 
+          // This function recursively return nodes on the lower hierachical level.
+          // This is used to create hierachycal data.
           var returnArrayContainingAllChildNodes = function(parent_id, parent_array, depth) {
-            var child_nodes = _.where(flat_data, {"parent_id": parent_id});
+            var child_nodes = _.where(flatten_data, {"parent_id": parent_id});
             var child_nodes_array = [];
             depth++;
 
             if(child_nodes.length > 0) {
               for(var i=0; i<child_nodes.length; i++) {
                   var child_node = {
-                    "id": child_nodes[i]["id"],
-                    "elemNum": child_nodes[i]["elemNum"],
-                    "name": child_nodes[i]["name"],
-                    "parent_id": child_nodes[i]["parent_id"],
-                    "mea": child_nodes[i]["mea"],
-                    "depth": depth
+                    "id": child_nodes[i]["id"], //NodeID
+                    "elemNum": child_nodes[i]["elemNum"], // ElemNum of NodeID
+                    "name": child_nodes[i]["name"], // NodeName
+                    "parent_id": child_nodes[i]["parent_id"], //ParentNodeID
+                    "mea": child_nodes[i]["mea"], // Measure
+                    "depth": depth // Depth
                   };
                   child_nodes_array[i] = child_node;
                   returnArrayContainingAllChildNodes(child_nodes[i]["id"], child_nodes_array[i], depth)
@@ -104,11 +147,13 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
             } else {
               return parent_array;
             }
-          }
-          var rootNode = _.findWhere(flat_data, {"id": root_node_id});
+          } // End of returnArrayContainingAllChildNodes
+
+          var rootNode = _.findWhere(flatten_data, {"id": root_node_id});
           var top_depth = 0;
           var hierarchical_data = returnArrayContainingAllChildNodes(root_node_id, rootNode, top_depth);
 
+          // Define container for this extension
           var $divContainer = $(document.createElement('div'));
           $divContainer.attr('id',extension_object_id);
           $divContainer.addClass('divTemplateContainer');
@@ -142,6 +187,7 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
           var toolTip = d3.select('#tooltip');
           var toolTipContent = d3.select('#tooltipcontent');
 
+          // Define width and hight of this extension
           var ext_width = 0, ext_height = 0;
           if (layout.properties.defineScreenSize) {
               ext_width = layout.properties.screenWidth;
@@ -177,7 +223,7 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
           root.x0 = height / 2;
           root.y0 = 0;
 
-          // Toggle children.
+          // Collapse child nodes.
           function collapse(d) {
             if (d.children) {
               d._children = d.children;
@@ -188,6 +234,7 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
             }
           }
 
+          // Collapse all child nodes
           function collapseAll(d) {
             if (d.children) {
               d.children.forEach(collapseAll);
@@ -197,6 +244,7 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
             }
           }
 
+          // Collapse child nodes when root data includes children. Then update the tree layout.
           if(!root.children){
             update(root);
           }
@@ -207,6 +255,7 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
 
           d3.select(self.frameElement).style("height", "800px");
 
+          // Update the tree sdlayout
           function update(source) {
 
             // Compute the new tree layout.
@@ -236,7 +285,7 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
                 .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
                 .style("font-size", layout.properties.fontSize + "px")
                 .text(function(d) {
-                    if (layout.properties.defineMeasure) {
+                    if (layout.properties.showMeasure) {
                       return d.name + ": " + d.mea;
                     } else {
                       return d.name;
@@ -314,8 +363,7 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
             .duration(200)
             .style("opacity", ".85");
 
-
-            if (layout.properties.defineMeasure) {
+            if (layout.properties.showMeasure) {
               toolTipContent.html(d.name + ":" + d.mea);
             } else {
               toolTipContent.html(d.name);
@@ -328,7 +376,8 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
                    .style("top", d + "px")
                    .style("z-index", 5);
           }
-          // Collapse clild on click.
+
+          // Collapse clild nodes by clicking a circle.
           function eventCollapseChild(d) {
             if (d.children) {
               d._children = d.children;
@@ -340,10 +389,17 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
             update(d);
           }
 
-          // Make Selections
+          // Make Selections by clicking a node text.
           function eventMakeSelection(d) {
-            selected.push(d.elemNum)
-            parent_id = d.parent_id;
+            selected.push(d.elemNum) // Store clicked node's elemNum to "selected" array.
+
+            if (layout.properties.selectionMode == "parent") {
+                parent_id = d.parent_id;
+            } else if (layout.properties.selectionMode == "child" ) {
+                my_id = d.id;
+            } else {
+              // do nothing
+            }
 
             if (layout.properties.clearAll) {
               //clear selections
@@ -352,8 +408,6 @@ function (qlik, $, _, props, initProps, extensionUtils, cssContent, d3) {
             } else {
               self.paint($element, layout)
             }
-
-
           }
 
     } // (Paint Method)

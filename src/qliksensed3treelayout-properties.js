@@ -29,8 +29,8 @@ define([], function () {
         type: "items",
         label: "Tree Structure Definition",
         items: {
-          defineMeasure: {
-            ref: "properties.defineMeasure",
+          showMeasure: {
+            ref: "properties.showMeasure",
             label: "Display Measure",
             type: "boolean",
             component: "switch",
@@ -70,6 +70,23 @@ define([], function () {
               { value: false, label: "No"}
             ],
             defaultValue: true
+          },
+          selectionMode: {
+            type: "string",
+            component: "dropdown",
+            label: "Selection Mode ",
+            ref: "properties.selectionMode",
+            options: [{
+              value: "parent",
+              label: "All Parent Nodes"
+            }, {
+              value: "child",
+              label: "All Child Nodes"
+            }, {
+              value: "selected",
+              label: "Only Selected Node"
+            }],
+            defaultValue: "parent"
           },
           defineScreenSize: {
             ref: "properties.defineScreenSize",
