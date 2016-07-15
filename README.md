@@ -5,7 +5,12 @@ This is a Qlik Sense Extension which displays a hierarchical node tree using D3.
 
 ## Screenshots
 
+![Alt text](./src/lib/images/sample.png)
+
 ## Installation
+Please Download built extension file from [here](./build/QlikSenseD3TreeLayout_v0.0.1.zip).
+Also, you can find a demo app [here](.D3_Tree_Layout_Sample.qvf).
+
 Qlik Sense Desktop Unzip the downloaded zip file into "C:\Users\%USERNAME%\Documents\Qlik\Sense\Extensions\" folder.
 
 Qlik Sense Server Please refer to the following instruction for importing an extension:
