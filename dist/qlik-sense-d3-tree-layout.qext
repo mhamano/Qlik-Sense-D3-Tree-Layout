@@ -1,0 +1,9 @@
+{
+	"name" : "Qlik-Sense-D3-Tree-Layout",
+	"description" : "This is a Qlik Sense Extension which displays a hierarchical node tree using D3.js. Tested on Qlik Sense 3.0.",
+	"icon" : "extension",
+	"type" : "visualization",
+	"version": "0.1.0",
+	"preview" : "qlik-sense-d3-tree-layout.png",
+	"author": "Masaki Hamano"
+}

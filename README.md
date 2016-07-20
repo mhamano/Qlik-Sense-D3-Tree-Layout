@@ -1,4 +1,4 @@
-# Qlik Sense D3 Tree Layout
+# Qlik-Sense-D3-Tree-Layout
 
 ## Purpose and Description
 This is a Qlik Sense Extension which displays a hierarchical node tree using D3.js. Tested on Qlik Sense 3.0.
@@ -8,14 +8,12 @@ This is a Qlik Sense Extension which displays a hierarchical node tree using D3.
 ![Alt text](./src/lib/images/sample.png)
 
 ## Installation
-Please Download built extension file from [here](./build/QlikSenseD3TreeLayout_v0.0.1.zip).
-Also, you can find a demo app [here](D3_Tree_Layout_Sample.qvf).
 
-Qlik Sense Desktop Unzip the downloaded zip file into "C:\Users\%USERNAME%\Documents\Qlik\Sense\Extensions\" folder.
-
-Qlik Sense Server Please refer to the following instruction for importing an extension:
-
-[Import Extension]( http://help.qlik.com/sense/en-US/online/#../Subsystems/ManagementConsole/Content/QMC_Resources_Extensions_AddingExtensions.htm?Highlight=add extension "Import Extension")
+1. Download the latest version
+2. Qlik Sense Desktop
+	* To install, copy all files in the .zip file to folder "C:\Users\[%Username%]\Documents\Qlik\Sense\Extensions\Qlik-Sense-D3-Tree-Layout"
+3. Qlik Sense Server
+	* See instructions [how to import an extension on Qlik Sense Server](http://help.qlik.com/sense/en-us/developer/#../Subsystems/Workbench/Content/BuildingExtensions/HowTos/deploy-extensions.htm)
 
 ## Configuration
 This extension includes the following configurable settings:
@@ -28,10 +26,16 @@ This extension includes the following configurable settings:
  * Define Screen Size - When "Auto" is selected, the width/height of the tree are adjusted to the extension area size. By selecting "Custom", you can specify the size of the extension.
  * Define a Default Collapse Level - When activated, you can specify the depth of the default collapse level.
 
+## Author
+
+**Masaki Hamano**
+* http://github.com/mhamano
+
 ## Change Log
 
-See [CHANGELOG.md](ChangeLog.md)
+See [CHANGELOG](CHANGELOG.yml)
 
 ## License & Copyright
+The software is made available "AS IS" without any warranty of any kind under the MIT License (MIT).
 
-See [LICENSE.md](License.md)
+See [Additional license information for this solution.](LICENSE.md)
