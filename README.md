@@ -1,7 +1,7 @@
 # Qlik-Sense-D3-Tree-Layout
 
 ## Purpose and Description
-This is a Qlik Sense Extension which displays a hierarchical node tree using D3.js. Tested on Qlik Sense 3.0.
+This is a Qlik Sense Extension which displays a hierarchical node tree using D3.js. This is originally created for a demo app of supply chain risk management to visualize the dependency of multi-tiered suppliers and supplied products. This extension is tested on Qlik Sense 3.0.
 
 ## Screenshots
 
@@ -9,7 +9,7 @@ This is a Qlik Sense Extension which displays a hierarchical node tree using D3.
 
 ## Installation
 
-1. Download the latest version
+1. Download the [latest version](./build/release/)
 2. Qlik Sense Desktop
 	* To install, copy all files in the .zip file to folder "C:\Users\[%Username%]\Documents\Qlik\Sense\Extensions\Qlik-Sense-D3-Tree-Layout"
 3. Qlik Sense Server
@@ -30,6 +30,11 @@ This extension includes the following configurable settings:
 
 **Masaki Hamano**
 * http://github.com/mhamano
+
+Thanks to the following community projects, which this extension is built upon.
+
+* [D3DynamicTreeLayout-QS](http://branch.qlik.com/#!/project/56728f52d1e497241ae698bd) by Renato Vieira
+* [Collapsible Tree](http://bl.ocks.org/mbostock/4339083) by Mike Bostock
 
 ## Change Log
 
