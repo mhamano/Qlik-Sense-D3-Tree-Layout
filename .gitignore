@@ -23,7 +23,7 @@ web.*.config
 # Build results
 
 [Dd]ebug/
-[Rr]elease/
+#[Rr]elease/
 x64/
 [Bb]in/
 [Oo]bj/
